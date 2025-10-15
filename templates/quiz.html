@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'academiq-orange': '#FF6B35',
+                        'academiq-dark': '#1A1A1A',
+                        'academiq-gray': '#6B7280'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-academiq-dark shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-academiq-orange rounded-lg flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-white text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-white">Learning Platform</h1>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="/" class="flex items-center space-x-2 text-gray-300 hover:text-white transition">
+                        <i class="fas fa-upload"></i>
+                        <span>Upload</span>
+                    </a>
+                    <a href="/chat" class="flex items-center space-x-2 text-gray-300 hover:text-white transition">
+                        <i class="fas fa-comments"></i>
+                        <span>Smart Chat</span>
+                    </a>
+                    <a href="/quiz" class="flex items-center space-x-2 text-academiq-orange font-medium">
+                        <i class="fas fa-brain"></i>
+                        <span>Quiz</span>
+                    </a>
+                    <a href="/analytics" class="flex items-center space-x-2 text-gray-300 hover:text-white transition">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analytics</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-6 max-w-4xl">
+        <!-- Quiz Setup -->
+        <div id="quizSetup" class="bg-white rounded-xl shadow-xl border border-gray-200 p-8">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-academiq-orange rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-brain text-white text-2xl"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-academiq-dark">Interactive Quiz</h2>
+                <p class="text-academiq-gray mt-2">Test your knowledge with intelligent questions</p>
+            </div>
+            
+            <!-- Lesson Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-academiq-dark mb-2 flex items-center">
+                    <i class="fas fa-book mr-2 text-academiq-orange"></i>
+                    Select Lesson
+                </label>
+                <select id="lessonSelect" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academiq-orange focus:border-academiq-orange">
+                    <option value="">Choose a lesson...</option>
+                    {% for lesson in lessons %}
+                    <option value="{{ lesson.lesson_key }}">{{ lesson.title }} ({{ lesson.type.upper() }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Quiz Options -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-academiq-dark mb-2 flex items-center">
+                        <i class="fas fa-list-ol mr-2 text-academiq-orange"></i>
+                        Number of Questions
+                    </label>
+                    <select id="numQuestions" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academiq-orange focus:border-academiq-orange">
+                        <option value="3">3 Questions</option>
+                        <option value="5" selected>5 Questions</option>
+                        <option value="8">8 Questions</option>
+                        <option value="10">10 Questions</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-academiq-dark mb-2 flex items-center">
+                        <i class="fas fa-chart-line mr-2 text-academiq-orange"></i>
+                        Difficulty Level
+                    </label>
+                    <select id="difficulty" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-academiq-orange focus:border-academiq-orange">
+                        <option value="easy">Easy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <div class="text-center">
+                <button onclick="generateQuiz()" id="generateBtn" 
+                        class="px-8 py-4 bg-academiq-orange text-white rounded-xl hover:bg-orange-600 transition duration-200 font-semibold flex items-center space-x-3 mx-auto">
+                    <i class="fas fa-magic"></i>
+                    <span>Generate Quiz</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Interface -->
+        <div id="quizInterface" class="bg-white rounded-xl shadow-xl border border-gray-200 p-8 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-academiq-dark flex items-center" id="quizTitle">
+                    <i class="fas fa-clipboard-question mr-3 text-academiq-orange"></i>
+                    Quiz
+                </h2>
+                <div class="bg-orange-100 text-academiq-orange px-3 py-1 rounded-full text-sm font-medium" id="questionCounter">Question 1 of 5</div>
+            </div>
+
+            <!-- Question -->
+            <div id="questionContainer" class="mb-6">
+                <!-- Questions will be inserted here -->
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between items-center">
+                <button onclick="previousQuestion()" id="prevBtn" 
+                        class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition duration-200 flex items-center space-x-2">
+                    <i class="fas fa-chevron-left"></i>
+                    <span>Previous</span>
+                </button>
+                
+                <div class="space-x-4">
+                    <button onclick="submitAnswer()" id="submitBtn" 
+                            class="px-6 py-2 bg-academiq-orange text-white rounded-lg hover:bg-orange-600 transition duration-200 flex items-center space-x-2">
+                        <i class="fas fa-check"></i>
+                        <span>Submit Answer</span>
+                    </button>
+                    <button onclick="nextQuestion()" id="nextBtn" 
+                            class="px-4 py-2 bg-academiq-orange text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition duration-200 flex items-center space-x-2">
+                        <span>Next</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <button onclick="finishQuiz()" id="finishBtn" 
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 flex items-center space-x-2">
+                    <i class="fas fa-flag-checkered"></i>
+                    <span>Finish Quiz</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Results -->
+        <div id="quizResults" class="bg-white rounded-xl shadow-xl border border-gray-200 p-8 hidden">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-trophy text-green-600 text-3xl"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-academiq-dark">Quiz Complete!</h2>
+            </div>
+            
+            <div class="text-center mb-8">
+                <div class="text-6xl font-bold text-blue-600 mb-2" id="scoreDisplay">0%</div>
+                <div class="text-xl text-gray-600" id="scoreText">0 out of 0 correct</div>
+            </div>
+
+            <div id="resultsDetails" class="space-y-4 mb-8">
+                <!-- Detailed results will be shown here -->
+            </div>
+
+            <div class="text-center">
+                <div class="flex flex-wrap justify-center gap-4">
+                    <button onclick="startNewQuiz()" 
+                            class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 flex items-center space-x-2">
+                        <i class="fas fa-redo"></i>
+                        <span>New Quiz</span>
+                    </button>
+                    <button onclick="reviewAnswers()" 
+                            class="px-6 py-3 bg-academiq-orange text-white rounded-lg hover:bg-orange-600 transition duration-200 flex items-center space-x-2">
+                        <i class="fas fa-search"></i>
+                        <span>Review Answers</span>
+                    </button>
+                    <a href="/analytics" 
+                       class="inline-flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition duration-200">
+                        <i class="fas fa-chart-line"></i>
+                        <span>View Analytics</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="bg-white rounded-xl shadow-xl border border-gray-200 p-8 text-center hidden">
+            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-spinner fa-spin text-academiq-orange text-2xl"></i>
+            </div>
+            <div class="text-academiq-orange text-xl mb-2 font-semibold">Generating quiz questions...</div>
+            <div class="text-academiq-gray">AI is creating personalized questions for you</div>
+        </div>
+    </div>
+
+    <script>
+        let currentQuiz = null;
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let quizResults = null;
+
+        function generateQuiz() {
+            const lessonKey = document.getElementById('lessonSelect').value;
+            const numQuestions = document.getElementById('numQuestions').value;
+            const difficulty = document.getElementById('difficulty').value;
+
+            if (!lessonKey) {
+                alert('Please select a lesson first!');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('quizSetup').classList.add('hidden');
+            document.getElementById('loading').classList.remove('hidden');
+
+            fetch('/api/quiz/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    lesson_key: lessonKey,
+                    num_questions: parseInt(numQuestions),
+                    difficulty: difficulty
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('loading').classList.add('hidden');
+                
+                if (data.questions && data.questions.length > 0) {
+                    currentQuiz = data.questions;
+                    userAnswers = new Array(currentQuiz.length).fill(null);
+                    currentQuestionIndex = 0;
+                    
+                    document.getElementById('quizTitle').innerHTML = `<i class="fas fa-clipboard-question mr-3 text-academiq-orange"></i>Quiz: ${data.lesson_title}`;
+                    showQuizInterface();
+                    displayQuestion();
+                } else {
+                    alert('Failed to generate quiz. Please try again.');
+                    document.getElementById('quizSetup').classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').classList.add('hidden');
+                alert('Error generating quiz: ' + error.message);
+                document.getElementById('quizSetup').classList.remove('hidden');
+            });
+        }
+
+        function showQuizInterface() {
+            document.getElementById('quizInterface').classList.remove('hidden');
+            document.getElementById('quizResults').classList.add('hidden');
+        }
+
+        function displayQuestion() {
+            const question = currentQuiz[currentQuestionIndex];
+            const container = document.getElementById('questionContainer');
+            
+            // Update counter
+            document.getElementById('questionCounter').textContent = 
+                `Question ${currentQuestionIndex + 1} of ${currentQuiz.length}`;
+            
+            // Update navigation buttons
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+            document.getElementById('nextBtn').disabled = currentQuestionIndex === currentQuiz.length - 1;
+            
+            let html = `<div class="mb-4">
+                <h3 class="text-lg font-semibold mb-4">${question.question}</h3>`;
+            
+            if (question.type === 'multiple_choice') {
+                html += '<div class="space-y-2">';
+                question.options.forEach((option, index) => {
+                    const isChecked = userAnswers[currentQuestionIndex] === option ? 'checked' : '';
+                    html += `
+                        <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-orange-50 hover:border-academiq-orange transition">
+                            <input type="radio" name="answer" value="${option}" ${isChecked} 
+                                   class="mr-3 text-academiq-orange" onchange="saveAnswer('${option}')">
+                            <span class="text-academiq-dark">${option}</span>
+                        </label>
+                    `;
+                });
+                html += '</div>';
+            } else if (question.type === 'true_false') {
+                const trueChecked = userAnswers[currentQuestionIndex] === true ? 'checked' : '';
+                const falseChecked = userAnswers[currentQuestionIndex] === false ? 'checked' : '';
+                html += `
+                    <div class="space-y-2">
+                        <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-orange-50 hover:border-academiq-orange transition">
+                            <input type="radio" name="answer" value="true" ${trueChecked} 
+                                   class="mr-3 text-academiq-orange" onchange="saveAnswer(true)">
+                            <span class="text-academiq-dark flex items-center"><i class="fas fa-check text-green-500 mr-2"></i>True</span>
+                        </label>
+                        <label class="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-orange-50 hover:border-academiq-orange transition">
+                            <input type="radio" name="answer" value="false" ${falseChecked} 
+                                   class="mr-3 text-academiq-orange" onchange="saveAnswer(false)">
+                            <span class="text-academiq-dark flex items-center"><i class="fas fa-times text-red-500 mr-2"></i>False</span>
+                        </label>
+                    </div>
+                `;
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function saveAnswer(answer) {
+            userAnswers[currentQuestionIndex] = answer;
+        }
+
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                displayQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < currentQuiz.length - 1) {
+                currentQuestionIndex++;
+                displayQuestion();
+            }
+        }
+
+        function submitAnswer() {
+            if (userAnswers[currentQuestionIndex] === null) {
+                alert('Please select an answer first!');
+                return;
+            }
+            
+            // Show feedback for current question
+            const question = currentQuiz[currentQuestionIndex];
+            const userAnswer = userAnswers[currentQuestionIndex];
+            
+            // Simple evaluation for immediate feedback
+            let correct = false;
+            if (question.type === 'multiple_choice') {
+                correct = userAnswer && userAnswer.startsWith(question.correct_answer);
+            } else if (question.type === 'true_false') {
+                correct = userAnswer === question.correct_answer;
+            }
+            
+            const feedback = correct ? 
+                '<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mt-4 flex items-center"><i class="fas fa-check-circle mr-2"></i>Correct!</div>' :
+                '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mt-4 flex items-center"><i class="fas fa-times-circle mr-2"></i>Incorrect</div>';
+            
+            document.getElementById('questionContainer').innerHTML += feedback;
+            
+            setTimeout(() => {
+                if (currentQuestionIndex < currentQuiz.length - 1) {
+                    nextQuestion();
+                }
+            }, 1500);
+        }
+
+        function finishQuiz() {
+            // Check if all questions are answered
+            const unanswered = userAnswers.filter(answer => answer === null).length;
+            if (unanswered > 0) {
+                if (!confirm(`You have ${unanswered} unanswered questions. Finish anyway?`)) {
+                    return;
+                }
+            }
+            
+            // Evaluate quiz
+            fetch('/api/quiz/evaluate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    questions: currentQuiz,
+                    answers: userAnswers
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                quizResults = data;
+                showResults();
+            })
+            .catch(error => {
+                alert('Error evaluating quiz: ' + error.message);
+            });
+        }
+
+        function showResults() {
+            document.getElementById('quizInterface').classList.add('hidden');
+            document.getElementById('quizResults').classList.remove('hidden');
+            
+            // Display score with color coding
+            const score = Math.round(quizResults.score);
+            const scoreElement = document.getElementById('scoreDisplay');
+            scoreElement.textContent = `${score}%`;
+            
+            // Color code the score
+            if (score >= 80) {
+                scoreElement.className = 'text-6xl font-bold text-green-600 mb-2';
+            } else if (score >= 60) {
+                scoreElement.className = 'text-6xl font-bold text-academiq-orange mb-2';
+            } else {
+                scoreElement.className = 'text-6xl font-bold text-red-600 mb-2';
+            }
+            
+            document.getElementById('scoreText').textContent = 
+                `${quizResults.correct_count} out of ${quizResults.total_questions} correct`;
+            
+            // Display detailed results
+            const detailsContainer = document.getElementById('resultsDetails');
+            let detailsHtml = '';
+            
+            quizResults.results.forEach((result, index) => {
+                const question = currentQuiz[index];
+                const bgColor = result.correct ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+                const icon = result.correct ? '<i class="fas fa-check-circle text-green-500"></i>' : '<i class="fas fa-times-circle text-red-500"></i>';
+                
+                detailsHtml += `
+                    <div class="border rounded-lg p-4 ${bgColor}">
+                        <div class="font-medium mb-2">${icon} Question ${index + 1}: ${question.question}</div>
+                        <div class="text-sm text-gray-600 mb-2">Your answer: ${userAnswers[index] || 'Not answered'}</div>
+                        <div class="text-sm text-gray-600 mb-2">Correct answer: ${result.correct_answer}</div>
+                        <div class="text-sm text-gray-700">${result.explanation}</div>
+                    </div>
+                `;
+            });
+            
+            detailsContainer.innerHTML = detailsHtml;
+        }
+
+        function startNewQuiz() {
+            document.getElementById('quizResults').classList.add('hidden');
+            document.getElementById('quizSetup').classList.remove('hidden');
+            currentQuiz = null;
+            userAnswers = [];
+            currentQuestionIndex = 0;
+        }
+
+        function reviewAnswers() {
+            document.getElementById('quizResults').classList.add('hidden');
+            document.getElementById('quizInterface').classList.remove('hidden');
+            currentQuestionIndex = 0;
+            displayQuestion();
+        }
+    </script>
+</body>
+</html>

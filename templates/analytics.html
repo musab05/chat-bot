@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'academiq-orange': '#FF6B35',
+                        'academiq-dark': '#1A1A1A',
+                        'academiq-gray': '#6B7280'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <nav class="bg-academiq-dark shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-academiq-orange rounded-lg flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-white text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-white">Learning Platform</h1>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="/" class="flex items-center space-x-2 text-gray-300 hover:text-white transition">
+                        <i class="fas fa-upload"></i>
+                        <span>Upload</span>
+                    </a>
+                    <a href="/chat" class="flex items-center space-x-2 text-gray-300 hover:text-white transition">
+                        <i class="fas fa-comments"></i>
+                        <span>Smart Chat</span>
+                    </a>
+                    <a href="/quiz" class="flex items-center space-x-2 text-gray-300 hover:text-white transition">
+                        <i class="fas fa-brain"></i>
+                        <span>Quiz</span>
+                    </a>
+                    <a href="/analytics" class="flex items-center space-x-2 text-academiq-orange font-medium">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analytics</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6 py-8 max-w-7xl">
+        <!-- Header -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-academiq-dark flex items-center">
+                <i class="fas fa-chart-line text-academiq-orange mr-3"></i>
+Analytics Dashboard
+            </h2>
+            <p class="text-academiq-gray mt-2">Track your learning progress and identify areas for improvement</p>
+        </div>
+
+        <!-- Overview Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-academiq-gray">Total Interactions</p>
+                        <p class="text-2xl font-bold text-academiq-dark">{{ analytics.total_interactions or 0 }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-comments text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-academiq-gray">Engagement Score</p>
+                        <p class="text-2xl font-bold text-academiq-dark">{{ "%.1f"|format(analytics.engagement_score * 100) if analytics.engagement_score else 0 }}%</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-heart text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-academiq-gray">Most Common Intent</p>
+                        <p class="text-2xl font-bold text-academiq-dark capitalize">{{ analytics.most_common_intent or 'None' }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-academiq-orange/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-bullseye text-academiq-orange text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-academiq-gray">Learning Trend</p>
+                        <p class="text-2xl font-bold text-academiq-dark capitalize">{{ analytics.learning_trend or 'Stable' }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-trending-up text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Favorite Topics -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                <h3 class="text-xl font-bold text-academiq-dark mb-4 flex items-center">
+                    <i class="fas fa-star text-academiq-orange mr-3"></i>
+                    Favorite Topics
+                </h3>
+                {% if analytics.favorite_topics %}
+                <div class="space-y-3">
+                    {% for topic, count in analytics.favorite_topics %}
+                    <div class="flex items-center justify-between">
+                        <span class="text-academiq-dark font-medium">{{ topic[:50] }}{% if topic|length > 50 %}...{% endif %}</span>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-20 bg-gray-200 rounded-full h-2">
+                                <div class="bg-academiq-orange h-2 rounded-full" style="width: {{ (count / analytics.favorite_topics[0][1] * 100) if analytics.favorite_topics else 0 }}%"></div>
+                            </div>
+                            <span class="text-sm text-academiq-gray">{{ count }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-academiq-gray">
+                    <i class="fas fa-chart-bar text-4xl mb-3"></i>
+                    <p>No topic data available yet</p>
+                    <p class="text-sm">Start chatting to see your favorite topics!</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Knowledge Gaps -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                <h3 class="text-xl font-bold text-academiq-dark mb-4 flex items-center">
+                    <i class="fas fa-exclamation-triangle text-yellow-500 mr-3"></i>
+                    Knowledge Gaps
+                </h3>
+                {% if analytics.knowledge_gaps %}
+                <div class="space-y-3">
+                    {% for gap in analytics.knowledge_gaps %}
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-center">
+                        <i class="fas fa-lightbulb text-yellow-500 mr-3"></i>
+                        <span class="text-yellow-800">{{ gap }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8 text-academiq-gray">
+                    <i class="fas fa-check-circle text-4xl mb-3 text-green-500"></i>
+                    <p class="text-green-600 font-medium">No knowledge gaps detected!</p>
+                    <p class="text-sm">You're doing great with your learning.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Intent Distribution Chart -->
+        <div class="mt-8 bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h3 class="text-xl font-bold text-academiq-dark mb-4 flex items-center">
+                <i class="fas fa-pie-chart text-academiq-orange mr-3"></i>
+                Learning Intent Distribution
+            </h3>
+            <div class="h-64">
+                <canvas id="intentChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Lessons Overview -->
+        <div class="mt-8 bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+            <h3 class="text-xl font-bold text-academiq-dark mb-4 flex items-center">
+                <i class="fas fa-book text-academiq-orange mr-3"></i>
+                Available Lessons
+            </h3>
+            {% if lessons %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for lesson in lessons %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-academiq-orange transition">
+                    <h4 class="font-semibold text-academiq-dark mb-2">{{ lesson.title }}</h4>
+                    <div class="flex items-center justify-between text-sm text-academiq-gray">
+                        <span class="flex items-center">
+                            <i class="fas fa-tag mr-1"></i>
+                            {{ lesson.type.upper() }}
+                        </span>
+                        <span>{{ lesson.uploaded_at[:10] if lesson.uploaded_at else 'Unknown' }}</span>
+                    </div>
+                    <div class="mt-3 flex space-x-2">
+                        <a href="/chat" class="flex-1 px-3 py-1 bg-academiq-orange text-white rounded text-center text-sm hover:bg-orange-600 transition">
+                            Chat
+                        </a>
+                        <a href="/quiz" class="flex-1 px-3 py-1 bg-green-600 text-white rounded text-center text-sm hover:bg-green-700 transition">
+                            Quiz
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 text-academiq-gray">
+                <i class="fas fa-folder-open text-4xl mb-3"></i>
+                <p>No lessons uploaded yet</p>
+                <a href="/" class="text-academiq-orange hover:underline font-medium">Upload your first lesson</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Learning Recommendations -->
+        <div class="mt-8 bg-gradient-to-r from-academiq-orange to-orange-500 rounded-xl shadow-lg p-6 text-white">
+            <h3 class="text-xl font-bold mb-4 flex items-center">
+                <i class="fas fa-magic mr-3"></i>
+Learning Recommendations
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white/20 rounded-lg p-4">
+                    <h4 class="font-semibold mb-2">Based on Your Activity</h4>
+                    {% if analytics.most_common_intent == 'explanation' %}
+                    <p class="text-sm">You frequently ask for explanations. Try requesting examples to reinforce your understanding!</p>
+                    {% elif analytics.most_common_intent == 'example' %}
+                    <p class="text-sm">You love examples! Consider asking for summaries to get broader overviews of topics.</p>
+                    {% elif analytics.most_common_intent == 'summary' %}
+                    <p class="text-sm">You prefer summaries. Try diving deeper with specific questions about concepts.</p>
+                    {% else %}
+                    <p class="text-sm">Keep exploring different types of questions to enhance your learning experience!</p>
+                    {% endif %}
+                </div>
+                <div class="bg-white/20 rounded-lg p-4">
+                    <h4 class="font-semibold mb-2">Engagement Tips</h4>
+                    {% if analytics.engagement_score and analytics.engagement_score < 0.5 %}
+                    <p class="text-sm">Try using the adaptive explanation feature to get personalized responses that match your learning style!</p>
+                    {% else %}
+                    <p class="text-sm">Great engagement! Consider exploring the quiz feature to test your knowledge.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Intent Distribution Chart
+        const intentData = {{ analytics.intent_distribution | tojson if analytics.intent_distribution else '{}' }};
+        
+        if (Object.keys(intentData).length > 0) {
+            const ctx = document.getElementById('intentChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(intentData).map(key => key.charAt(0).toUpperCase() + key.slice(1)),
+                    datasets: [{
+                        data: Object.values(intentData),
+                        backgroundColor: [
+                            '#FF6B35',
+                            '#4F46E5',
+                            '#10B981',
+                            '#F59E0B',
+                            '#EF4444',
+                            '#8B5CF6',
+                            '#06B6D4'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            document.getElementById('intentChart').parentElement.innerHTML = `
+                <div class="h-64 flex items-center justify-center text-academiq-gray">
+                    <div class="text-center">
+                        <i class="fas fa-chart-pie text-4xl mb-3"></i>
+                        <p>No interaction data available yet</p>
+                        <p class="text-sm">Start chatting to see your learning patterns!</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Auto-refresh analytics every 30 seconds
+        setInterval(() => {
+            fetch(`/api/chat/analytics/{{ user_id }}`)
+            .then(response => response.json())
+            .then(data => {
+                // Update engagement score
+                const engagementElement = document.querySelector('[data-metric="engagement"]');
+                if (engagementElement && data.engagement_score) {
+                    engagementElement.textContent = (data.engagement_score * 100).toFixed(1) + '%';
+                }
+                
+                // Update total interactions
+                const interactionsElement = document.querySelector('[data-metric="interactions"]');
+                if (interactionsElement && data.total_interactions) {
+                    interactionsElement.textContent = data.total_interactions;
+                }
+            })
+            .catch(error => {
+                console.error('Failed to refresh analytics:', error);
+            });
+        }, 30000);
+    </script>
+</body>
+</html>

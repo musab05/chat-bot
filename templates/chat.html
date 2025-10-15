@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'academiq-orange': '#FF6B35',
+                        'academiq-dark': '#1A1A1A',
+                        'academiq-gray': '#6B7280'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+    <nav class="bg-academiq-dark shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-academiq-orange rounded-lg flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-white text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-white">Learning Platform</h1>
+                </div>
+                <div class="flex space-x-6">
+                    <a href="/" class="flex items-center space-x-2 text-gray-300 hover:text-white transition">
+                        <i class="fas fa-upload"></i>
+                        <span>Upload</span>
+                    </a>
+                    <a href="/chat" class="flex items-center space-x-2 text-academiq-orange font-medium">
+                        <i class="fas fa-comments"></i>
+                        <span>Smart Chat</span>
+                    </a>
+                    <a href="/quiz" class="flex items-center space-x-2 text-gray-300 hover:text-white transition">
+                        <i class="fas fa-brain"></i>
+                        <span>Quiz</span>
+                    </a>
+                    <a href="/analytics" class="flex items-center space-x-2 text-gray-300 hover:text-white transition">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Analytics</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="flex-1 flex">
+        <!-- Lesson Selection Sidebar -->
+        <div class="w-80 bg-white border-r border-gray-200 flex flex-col">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center">
+                    <i class="fas fa-book-open text-academiq-orange text-xl mr-3"></i>
+                    <h3 class="text-xl font-bold text-academiq-dark">Lessons</h3>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+                <div class="space-y-3">
+                    {% for lesson in lessons %}
+                    <div class="lesson-item p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-orange-50 hover:border-academiq-orange transition duration-200"
+                         data-lesson-key="{{ lesson.lesson_key }}" data-lesson-title="{{ lesson.title }}">
+                        <div class="font-medium text-sm text-academiq-dark mb-2">{{ lesson.title }}</div>
+                        <div class="text-xs text-academiq-gray flex items-center">
+                            <i class="fas fa-tag mr-1"></i>
+                            {{ lesson.type.upper() }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if not lessons %}
+                    <div class="text-center py-12">
+                        <i class="fas fa-folder-open text-academiq-gray text-4xl mb-4"></i>
+                        <p class="text-academiq-gray text-sm mb-3">No lessons uploaded yet</p>
+                        <a href="/" class="text-academiq-orange hover:underline font-medium">Upload your first lesson</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div class="flex-1 flex flex-col bg-gray-50">
+            <!-- Chat Header -->
+            <div class="bg-white border-b border-gray-200 px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-semibold flex items-center text-academiq-dark" id="chatTitle">
+                        <i class="fas fa-robot mr-3 text-academiq-orange"></i>
+                        Select a lesson to start chatting
+                    </h3>
+                    <div class="flex space-x-2" id="chatControls" style="display: none;">
+                        <button onclick="showLearningPreferences()" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200 transition">
+                            <i class="fas fa-cog mr-1"></i>
+                            Preferences
+                        </button>
+                        <button onclick="showLessonInsights()" class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 transition">
+                            <i class="fas fa-lightbulb mr-1"></i>
+                            Insights
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div class="flex-1 overflow-y-auto p-6" id="chatMessages">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-center text-academiq-gray py-16">
+                        <i class="fas fa-comments text-6xl mb-6 text-academiq-gray"></i>
+                        <h4 class="text-2xl font-semibold mb-3 text-academiq-dark">Learning Assistant</h4>
+                        <p class="text-lg mb-4">Choose a lesson from the sidebar to begin your personalized learning conversation!</p>
+                        <div class="bg-orange-50 border border-academiq-orange rounded-lg p-4 max-w-md mx-auto">
+                            <h5 class="font-semibold text-academiq-dark mb-2">Features:</h5>
+                            <ul class="text-sm text-academiq-gray space-y-1">
+                                <li>• Intent-aware responses</li>
+                                <li>• Context memory across sessions</li>
+                                <li>• Adaptive complexity levels</li>
+                                <li>• Learning analytics tracking</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="bg-white border-t border-gray-200 p-6">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Smart Actions -->
+                    <div class="mb-4 flex flex-wrap gap-2" id="smartActions" style="display: none;">
+                        <button onclick="sendSmartMessage('Please provide a summary of this lesson', 'summary')" 
+                                class="px-4 py-2 bg-orange-100 text-academiq-orange rounded-lg text-sm hover:bg-orange-200 transition duration-200 flex items-center space-x-2">
+                            <i class="fas fa-list-ul"></i>
+                            <span>Summary</span>
+                        </button>
+                        <button onclick="sendSmartMessage('What are the key points of this lesson?', 'explanation')" 
+                                class="px-4 py-2 bg-orange-100 text-academiq-orange rounded-lg text-sm hover:bg-orange-200 transition duration-200 flex items-center space-x-2">
+                            <i class="fas fa-key"></i>
+                            <span>Key Points</span>
+                        </button>
+                        <button onclick="sendSmartMessage('Give me examples of the main concepts', 'example')" 
+                                class="px-4 py-2 bg-orange-100 text-academiq-orange rounded-lg text-sm hover:bg-orange-200 transition duration-200 flex items-center space-x-2">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>Examples</span>
+                        </button>
+                        <button onclick="requestAdaptiveExplanation()" 
+                                class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200 transition duration-200 flex items-center space-x-2">
+                            <i class="fas fa-magic"></i>
+                            <span>Adaptive Explain</span>
+                        </button>
+                    </div>
+                    
+                    <div class="flex space-x-4">
+                        <div class="relative flex-1">
+                            <i class="fas fa-message absolute left-4 top-1/2 transform -translate-y-1/2 text-academiq-gray"></i>
+                            <input type="text" id="messageInput" placeholder="Ask anything about the lesson..." 
+                                   class="w-full pl-12 pr-4 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-academiq-orange focus:border-academiq-orange text-lg"
+                                   disabled onkeypress="handleKeyPress(event)">
+                        </div>
+                        <button onclick="sendMessage()" id="sendBtn" disabled
+                                class="px-8 py-4 bg-academiq-orange text-white rounded-xl hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition duration-200 flex items-center space-x-2 font-medium">
+                            <i class="fas fa-paper-plane"></i>
+                            <span>Send</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Learning Preferences Modal -->
+    <div id="preferencesModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-bold text-academiq-dark mb-4">Learning Preferences</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-academiq-dark mb-2">Explanation Complexity</label>
+                    <select id="complexitySelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <option value="simple">Simple (Beginner-friendly)</option>
+                        <option value="medium" selected>Medium (Balanced)</option>
+                        <option value="advanced">Advanced (Technical)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-academiq-dark mb-2">Learning Style</label>
+                    <select id="learningStyleSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <option value="visual">Visual</option>
+                        <option value="auditory">Auditory</option>
+                        <option value="kinesthetic">Kinesthetic</option>
+                        <option value="balanced" selected>Balanced</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex space-x-3 mt-6">
+                <button onclick="savePreferences()" class="flex-1 px-4 py-2 bg-academiq-orange text-white rounded-lg hover:bg-orange-600 transition">
+                    Save
+                </button>
+                <button onclick="closePreferences()" class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Adaptive Explanation Modal -->
+    <div id="adaptiveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl p-6 max-w-lg w-full mx-4">
+            <h3 class="text-xl font-bold text-academiq-dark mb-4">Request Adaptive Explanation</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-academiq-dark mb-2">Topic to Explain</label>
+                    <input type="text" id="adaptiveTopic" placeholder="Enter topic or concept..." 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-academiq-dark mb-2">Explanation Type</label>
+                    <select id="adaptiveIntent" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <option value="explanation">Explanation</option>
+                        <option value="example">Examples</option>
+                        <option value="definition">Definition</option>
+                        <option value="application">How to Apply</option>
+                        <option value="comparison">Compare/Contrast</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-academiq-dark mb-2">Complexity Level</label>
+                    <select id="adaptiveComplexity" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <option value="simple">Simple</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex space-x-3 mt-6">
+                <button onclick="generateAdaptiveExplanation()" class="flex-1 px-4 py-2 bg-academiq-orange text-white rounded-lg hover:bg-orange-600 transition">
+                    Generate
+                </button>
+                <button onclick="closeAdaptiveModal()" class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedLessonKey = null;
+        let selectedLessonTitle = null;
+        const userId = '{{ user_id }}';
+
+        // Add click event listeners to lesson items
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.lesson-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const lessonKey = this.getAttribute('data-lesson-key');
+                    const lessonTitle = this.getAttribute('data-lesson-title');
+                    selectLesson(lessonKey, lessonTitle);
+                });
+            });
+        });
+
+        function selectLesson(lessonKey, lessonTitle) {
+            selectedLessonKey = lessonKey;
+            selectedLessonTitle = lessonTitle;
+            
+            // Update UI
+            document.getElementById('chatTitle').innerHTML = `<i class="fas fa-robot mr-3 text-academiq-orange"></i>Smart Chat: ${lessonTitle}`;
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('smartActions').style.display = 'flex';
+            document.getElementById('chatControls').style.display = 'flex';
+            
+            // Clear chat and show welcome message
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = `
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-orange-50 border border-academiq-orange rounded-xl p-6 mb-6">
+                        <div class="flex items-center mb-3">
+                            <i class="fas fa-graduation-cap text-academiq-orange text-2xl mr-3"></i>
+                            <h4 class="text-lg font-semibold text-academiq-dark">Ready for AI-powered learning about "${lessonTitle}"!</h4>
+                        </div>
+                        <p class="text-academiq-gray mb-3">This enhanced chat features:</p>
+                        <ul class="text-sm text-academiq-gray space-y-1">
+                            <li>• <strong>Intent Recognition:</strong> I understand what type of help you need</li>
+                            <li>• <strong>Context Memory:</strong> I remember our conversation history</li>
+                            <li>• <strong>Adaptive Responses:</strong> Explanations match your learning level</li>
+                            <li>• <strong>Learning Analytics:</strong> Track your progress and identify knowledge gaps</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            // Highlight selected lesson
+            document.querySelectorAll('.lesson-item').forEach(item => {
+                item.classList.remove('bg-orange-100', 'border-academiq-orange');
+                if (item.getAttribute('data-lesson-key') === lessonKey) {
+                    item.classList.add('bg-orange-100', 'border-academiq-orange');
+                }
+            });
+        }
+
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message || !selectedLessonKey) return;
+            
+            // Add user message to chat
+            addMessage(message, 'user');
+            messageInput.value = '';
+            
+            // Show typing indicator
+            const typingId = addMessage('<i class="fas fa-spinner fa-spin mr-2"></i>Analyzing your question...', 'assistant', true);
+            
+            // Send to API
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    lesson_key: selectedLessonKey,
+                    message: message
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove typing indicator
+                document.getElementById(typingId).remove();
+                
+                if (data.response) {
+                    addMessage(data.response, 'assistant');
+                } else {
+                    addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+                }
+            })
+            .catch(error => {
+                // Remove typing indicator
+                document.getElementById(typingId).remove();
+                addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+            });
+        }
+
+        function sendSmartMessage(message, intent) {
+            document.getElementById('messageInput').value = message;
+            sendMessage();
+        }
+
+        function requestAdaptiveExplanation() {
+            document.getElementById('adaptiveModal').classList.remove('hidden');
+        }
+
+        function generateAdaptiveExplanation() {
+            const topic = document.getElementById('adaptiveTopic').value.trim();
+            const intent = document.getElementById('adaptiveIntent').value;
+            const complexity = document.getElementById('adaptiveComplexity').value;
+            
+            if (!topic || !selectedLessonKey) return;
+            
+            closeAdaptiveModal();
+            
+            // Add user message to chat
+            addMessage(`Generate ${intent} for "${topic}" at ${complexity} level`, 'user');
+            
+            // Show typing indicator
+            const typingId = addMessage('<i class="fas fa-magic fa-spin mr-2"></i>Generating adaptive explanation...', 'assistant', true);
+            
+            fetch('/api/chat/adaptive', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    lesson_key: selectedLessonKey,
+                    topic: topic,
+                    intent: intent,
+                    complexity: complexity
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Remove typing indicator
+                document.getElementById(typingId).remove();
+                
+                if (data.explanation) {
+                    const adaptiveMessage = `
+                        <div class="mb-2 text-xs text-blue-600 flex items-center">
+                            <i class="fas fa-magic mr-1"></i>
+                            Adaptive ${data.intent} (${data.complexity} level)
+                        </div>
+                        ${data.explanation}
+                    `;
+                    addMessage(adaptiveMessage, 'assistant');
+                } else {
+                    addMessage('Sorry, I could not generate an adaptive explanation. Please try again.', 'assistant');
+                }
+            })
+            .catch(error => {
+                document.getElementById(typingId).remove();
+                addMessage('Sorry, I encountered an error generating the explanation.', 'assistant');
+            });
+        }
+
+        function showLearningPreferences() {
+            document.getElementById('preferencesModal').classList.remove('hidden');
+        }
+
+        function closePreferences() {
+            document.getElementById('preferencesModal').classList.add('hidden');
+        }
+
+        function closeAdaptiveModal() {
+            document.getElementById('adaptiveModal').classList.add('hidden');
+        }
+
+        function savePreferences() {
+            const complexity = document.getElementById('complexitySelect').value;
+            const learningStyle = document.getElementById('learningStyleSelect').value;
+            
+            fetch('/api/chat/context', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    complexity: complexity,
+                    learning_style: learningStyle
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    addMessage(`Preferences updated! Explanations will now be at ${complexity} level with ${learningStyle} learning style.`, 'system');
+                }
+            })
+            .catch(error => {
+                console.error('Failed to save preferences:', error);
+            });
+            
+            closePreferences();
+        }
+
+        function showLessonInsights() {
+            if (!selectedLessonKey) return;
+            
+            fetch(`/api/lesson/insights/${selectedLessonKey}`)
+            .then(response => response.json())
+            .then(insights => {
+                displayLessonInsights(insights);
+            })
+            .catch(error => {
+                console.error('Failed to load insights:', error);
+            });
+        }
+
+        function displayLessonInsights(insights) {
+            let insightsHtml = '<div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4"><h5 class="font-semibold text-blue-800 mb-3 flex items-center"><i class="fas fa-lightbulb mr-2"></i>Lesson Insights</h5>';
+            
+            if (insights.sentiment) {
+                insightsHtml += `<p class="text-sm text-blue-700 mb-2"><strong>Sentiment:</strong> ${insights.sentiment.emotion} (${insights.sentiment.polarity.toFixed(2)})</p>`;
+            }
+            
+            if (insights.difficulty) {
+                insightsHtml += `<p class="text-sm text-blue-700 mb-2"><strong>Difficulty:</strong> ${insights.difficulty.difficulty_level} (Grade ${insights.difficulty.flesch_kincaid_grade.toFixed(1)})</p>`;
+            }
+            
+            if (insights.keywords && insights.keywords.length > 0) {
+                const topKeywords = insights.keywords.slice(0, 5).map(kw => kw.keyword).join(', ');
+                insightsHtml += `<p class="text-sm text-blue-700"><strong>Key Topics:</strong> ${topKeywords}</p>`;
+            }
+            
+            insightsHtml += '</div>';
+            
+            addMessage(insightsHtml, 'system');
+        }
+
+        function addMessage(content, sender, isTemporary = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageId = isTemporary ? `temp-${Date.now()}` : null;
+            
+            let maxWidthContainer = chatMessages.querySelector('.max-w-4xl');
+            if (!maxWidthContainer) {
+                maxWidthContainer = document.createElement('div');
+                maxWidthContainer.className = 'max-w-4xl mx-auto';
+                chatMessages.appendChild(maxWidthContainer);
+            }
+            
+            const messageDiv = document.createElement('div');
+            if (messageId) messageDiv.id = messageId;
+            
+            // Format content for better readability
+            const formattedContent = formatMessage(content);
+            
+            if (sender === 'user') {
+                messageDiv.className = 'flex justify-end mb-4';
+                messageDiv.innerHTML = `
+                    <div class="bg-academiq-orange text-white rounded-2xl px-6 py-4 max-w-2xl shadow-sm">
+                        <div class="text-base leading-relaxed">${formattedContent}</div>
+                    </div>
+                `;
+            } else if (sender === 'system') {
+                messageDiv.className = 'mb-4';
+                messageDiv.innerHTML = formattedContent;
+            } else {
+                messageDiv.className = 'flex justify-start mb-4';
+                messageDiv.innerHTML = `
+                    <div class="bg-white text-academiq-dark rounded-2xl px-6 py-4 max-w-3xl shadow-sm border border-gray-200">
+                        <div class="text-base leading-relaxed">${formattedContent}</div>
+                    </div>
+                `;
+            }
+            
+            maxWidthContainer.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            return messageId;
+        }
+
+        function formatMessage(content) {
+            // Decode HTML entities first
+            const div = document.createElement('div');
+            div.innerHTML = content;
+            let text = div.textContent || div.innerText || '';
+            
+            // Format all numbered lists consistently
+            text = text.replace(/(\d+\.)\s*([^\n]+)/g, '<div class="mt-3 mb-2"><span class="font-bold text-academiq-orange">$1</span> <span class="font-medium">$2</span></div>');
+            
+            // Format remaining bold text
+            text = text.replace(/\*\*([^*]+)\*\*/g, '<strong class="font-semibold text-academiq-dark">$1</strong>');
+            
+            // Format bullet points
+            text = text.replace(/^-\s*(.+)$/gm, '<div class="ml-4 mb-1 text-gray-700">• $1</div>');
+            
+            // Split into paragraphs and format remaining text
+            const lines = text.split('\n');
+            const formatted = lines.map(line => {
+                line = line.trim();
+                if (!line) return '';
+                if (line.includes('<div')) return line;
+                return `<p class="mb-3 text-gray-800 leading-relaxed">${line}</p>`;
+            }).filter(line => line).join('');
+            
+            return formatted;
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+    </script>
+</body>
+</html>

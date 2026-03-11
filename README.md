@@ -1,10 +1,10 @@
-# AI-Powered Learning Management System
+# AI-Powered Chatbot for Learning Management System
 
-An intelligent chatbot-based Learning Management System that uses advanced NLP and AI to provide personalized, interactive learning experiences. Upload educational content in multiple formats and interact with an AI tutor that understands context, adapts to your learning style, and tracks your progress.
+An intelligent chatbot-based for Learning Management System that uses advanced NLP and AI to provide personalized, interactive learning experiences. Upload educational content in multiple formats and interact with an AI tutor that understands context, adapts to your learning style, and tracks your progress.
 
 ## 🎯 Project Overview
 
-This AI-powered LMS transforms static educational content into interactive learning experiences. Upload documents, videos, or YouTube links, and the system creates an intelligent chatbot tutor that:
+This AI-powered transforms static educational content into interactive learning experiences. Upload documents, videos, or YouTube links, and the system creates an intelligent chatbot tutor that:
 - Understands your questions with intent classification
 - Provides context-aware responses using RAG (Retrieval-Augmented Generation)
 - Adapts explanations to your complexity level
